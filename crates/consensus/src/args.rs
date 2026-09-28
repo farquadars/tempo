@@ -398,6 +398,11 @@ impl FromStr for PositiveDuration {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let duration = s.parse::<jiff::SignedDuration>()?;
         let _: Duration = duration.try_into().wrap_err("duration must be positive")?;
+        // `Duration::try_from` only rejects negative durations; zero converts cleanly, so
+        // the "not zero" half of this type's contract needs a check of its own.
+        if duration.as_secs() == 0 && duration.subsec_nanos() == 0 {
+            return Err("duration must be greater than zero".into());
+        }
 
         Ok(Self(duration))
     }
@@ -572,7 +577,7 @@ mod tests {
     use clap::Parser as _;
     use commonware_codec::Encode as _;
 
-    use super::Args;
+    use super::{Args, PositiveDuration};
 
     const SIGNING_KEY_HEX: &str =
         "0x7848b5d711bc9883996317a3f9c90269d56771005d540a19184939c9e8d0db2a";
@@ -618,6 +623,39 @@ mod tests {
             "--consensus.time-to-build-proposal",
         ] {
             parse(&["--dev", flag, "1ms"]);
+        }
+    }
+
+    #[test]
+    fn positive_duration_rejects_zero_and_negative_values() {
+        assert_eq!(
+            "0s".parse::<PositiveDuration>().unwrap_err().to_string(),
+            "duration must be greater than zero"
+        );
+        for value in ["0ms", "0s", "-1ms", "-1s"] {
+            assert!(
+                value.parse::<PositiveDuration>().is_err(),
+                "{value} must be rejected"
+            );
+        }
+        assert_eq!(
+            "1ms".parse::<PositiveDuration>().unwrap().into_duration(),
+            Duration::from_millis(1)
+        );
+    }
+
+    #[test]
+    fn cli_rejects_zero_durations() {
+        for flag in [
+            "--consensus.network-budget",
+            "--consensus.target-block-time",
+            "--consensus.dial-timeout",
+            "--consensus.handshake-timeout",
+        ] {
+            assert!(
+                TestCli::try_parse_from(["tempo", "--dev", flag, "0s"]).is_err(),
+                "{flag} must reject a zero duration"
+            );
         }
     }
 
