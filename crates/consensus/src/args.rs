@@ -625,16 +625,10 @@ mod tests {
 
     #[test]
     fn positive_duration_rejects_zero_and_negative_values() {
-        assert_eq!(
-            "0s".parse::<PositiveDuration>().unwrap_err().to_string(),
-            "duration must be greater than zero"
-        );
-        for value in ["0ms", "0s", "-1ms", "-1s"] {
-            assert!(
-                value.parse::<PositiveDuration>().is_err(),
-                "{value} must be rejected"
-            );
-        }
+        assert_non_positive_duration_error("0ms");
+        assert_non_positive_duration_error("0s");
+        assert_non_positive_duration_error("-1ms");
+        assert_non_positive_duration_error("-1s");
         assert_eq!(
             "1ms".parse::<PositiveDuration>().unwrap().into_duration(),
             Duration::from_millis(1)
@@ -938,5 +932,13 @@ mod tests {
             .await
             .expect_err("loading with a wrong passphrase must fail");
         writer.join().unwrap();
+    }
+
+    #[track_caller]
+    fn assert_non_positive_duration_error(value: &str) {
+        assert_eq!(
+            value.parse::<PositiveDuration>().unwrap_err().to_string(),
+            "duration must be greater than zero"
+        );
     }
 }
