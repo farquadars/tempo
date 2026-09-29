@@ -397,8 +397,7 @@ impl FromStr for PositiveDuration {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let duration = s.parse::<jiff::SignedDuration>()?;
-        let _: Duration = duration.try_into().wrap_err("duration must be positive")?;
-        if duration.as_secs() == 0 && duration.subsec_nanos() == 0 {
+        if !duration.is_positive() {
             return Err("duration must be greater than zero".into());
         }
 
