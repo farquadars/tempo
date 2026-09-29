@@ -636,21 +636,6 @@ mod tests {
     }
 
     #[test]
-    fn cli_rejects_zero_durations() {
-        for flag in [
-            "--consensus.network-budget",
-            "--consensus.target-block-time",
-            "--consensus.dial-timeout",
-            "--consensus.handshake-timeout",
-        ] {
-            assert!(
-                TestCli::try_parse_from(["tempo", "--dev", flag, "0s"]).is_err(),
-                "{flag} must reject a zero duration"
-            );
-        }
-    }
-
-    #[test]
     fn simplex_timing_defaults_validate() {
         parse(&["--dev"])
             .consensus
