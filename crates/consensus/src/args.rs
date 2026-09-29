@@ -617,7 +617,6 @@ mod tests {
 
     use super::{Args, PositiveDuration, VerificationMode};
 
-
     const SIGNING_KEY_HEX: &str =
         "0x7848b5d711bc9883996317a3f9c90269d56771005d540a19184939c9e8d0db2a";
     const PASSPHRASE: &str = "correct horse battery staple";
